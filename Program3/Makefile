@@ -1,15 +1,9 @@
-default: all	
+all: player dealer
 	
-all: dealer.o player.o
-
-dealer.o:	dealer.c
-	gcc -ansi -pedantic -o dealer.out dealer.c
-
-program.o: player.c
-	gcc -ansi -pedantic -o player player.c
-
-.PHONY: clean
+player:
+	gcc -ansi -pedantic player.c -o player
+dealer:
+	gcc -ansi -pedantic dealer.c -o dealer
 
 clean:
-	rm -rf dealer.out
-	rm -rf player
+	rm -f dealer player
