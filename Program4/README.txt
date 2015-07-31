@@ -1,0 +1,1 @@
+Everything should be working fine. I can open server and it will stay open until it is killed with sigint. For the client i can send commands to the server using the port that was opened on the server. 

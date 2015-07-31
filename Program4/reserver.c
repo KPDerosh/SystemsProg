@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     char printBuffer[1024];
     struct sockaddr_in serv_addr, cli_addr;
     char *token;
-    int index = 0, counter = 0, stringCounter = 0;
+    int index = 0, counter = 0;
     char *arg[100];
     const char s[2] = ",";
 
@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
         write(1, "Binding failed.", 15);
     } else {
+        /*get and output the port number*/
         length = sizeof(serv_addr);
         getsockname(sockfd, (struct sockaddr *)&serv_addr, &length);
         sprintf(printBuffer, "Assigned port number %d\n", ntohs(serv_addr.sin_port));
@@ -42,7 +43,9 @@ int main(int argc, char *argv[])
     }
     
     listen(sockfd,5);
+    /*until this process has sigint sent to it keep accepting things*/
     while(1){
+
         clilen = sizeof(cli_addr);
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
         if (newsockfd < 0) {
@@ -50,16 +53,18 @@ int main(int argc, char *argv[])
             write(1, &printBuffer, strlen(printBuffer));
         }
 
+        /*reset buffer then read for client process.*/
         bzero(buffer,1024);
         n = read(newsockfd,buffer,1024);
         if (n < 0){
-            sprintf(printBuffer, "%s", "Error reading from socket");
+            sprintf(printBuffer, "%s\n", "Error reading from socket");
             write(1, &printBuffer, strlen(printBuffer));
         }
 
-        sprintf(printBuffer, "%s %s", "Received command", buffer);
+        sprintf(printBuffer, "%s %s\n", "Received command", buffer);
         write(1, &printBuffer, strlen(printBuffer));
 
+        /*split up command based on commas*/
         token = strtok(buffer, s);
         while(token != NULL){
             arg[counter] = token;
@@ -67,11 +72,13 @@ int main(int argc, char *argv[])
             token = strtok(NULL,s);
         }
         arg[counter + 1] = NULL;
+
         /*execute  the command*/
         /*create child process*/
         pid = fork(); 
         if(pid == -1){ 
-
+            sprintf(printBuffer, "%s", "Something went wrong in the fork");
+            write(1, &printBuffer, strlen(printBuffer));
         }
         if(pid != 0){   
             /*parent*/
@@ -82,14 +89,13 @@ int main(int argc, char *argv[])
         } else if(pid == 0){/*child*/
             /*redirect stdout to go to the socket*/
             dup2(newsockfd, 1);
-            close(newsockfd);
-            execvp(arg[0], arg);   /*run player process*/
+            close(newsockfd);   /*close unused socket*/
+            execvp(arg[0], arg);   /*run the process that the command is parsed to process*/
         }
 
-        if (n < 0){
-            sprintf(printBuffer, "%s", "Error reading from socket");
-            write(1, &printBuffer, strlen(printBuffer));
-        }
+        /*reset things so another command can be run*/
+        counter=0;
+        bzero(buffer,1024);
     }
     
     return 0; 
