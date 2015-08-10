@@ -1,2 +1,0 @@
-# SystemsProg
-Systems programming assignments

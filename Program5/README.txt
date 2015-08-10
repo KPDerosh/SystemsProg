@@ -1,0 +1,1 @@
+Everything is working besides a process being able to quit out of a chat client. 
